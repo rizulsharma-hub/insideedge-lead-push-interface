@@ -40,7 +40,22 @@ const inputBase =
   "border-white/10 hover:border-white/25 " +
   "focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20";
 
+const inputError =
+  "w-full rounded-xl border bg-white/5 px-4 py-2.5 text-sm text-white placeholder-slate-500 " +
+  "transition-all duration-200 outline-none " +
+  "border-rose-500/60 hover:border-rose-500 " +
+  "focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20";
+
 const labelBase = "block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5";
+
+function validateMobile(value: string) {
+  return /^\d{10}$/.test(value) ? "" : "Mobile number must be exactly 10 digits";
+}
+
+function validateEmail(value: string) {
+  if (!value) return "";
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? "" : "Enter a valid email address";
+}
 
 export default function LeadForm() {
   const [name, setName] = useState("");
@@ -52,9 +67,17 @@ export default function LeadForm() {
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<SubmitResult | null>(null);
+  const [mobileErr, setMobileErr] = useState("");
+  const [emailErr, setEmailErr] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const mErr = validateMobile(mobile);
+    const eErr = validateEmail(email);
+    setMobileErr(mErr);
+    setEmailErr(eErr);
+    if (mErr || eErr) return;
+
     setResult(null);
     setLoading(true);
 
@@ -148,15 +171,17 @@ export default function LeadForm() {
           <input
             type="tel"
             value={mobile}
-            onChange={(e) => setMobile(e.target.value)}
+            onChange={(e) => { const v = e.target.value.replace(/\D/g, ""); setMobile(v); if (mobileErr) setMobileErr(""); }}
+            onBlur={() => setMobileErr(validateMobile(mobile))}
             placeholder="9876543210"
-            required
-            className={`flex-1 rounded-xl border bg-white/5 px-4 py-2.5 text-sm text-white placeholder-slate-500
-              transition-all duration-200 outline-none border-white/10 hover:border-white/25
-              focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20`}
+            maxLength={10}
+            className={`flex-1 ${mobileErr ? inputError : "rounded-xl border bg-white/5 px-4 py-2.5 text-sm text-white placeholder-slate-500 transition-all duration-200 outline-none border-white/10 hover:border-white/25 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20"}`}
           />
         </div>
-        <p className="text-xs text-slate-600 mt-1.5 ml-0.5">Country code · Mobile number</p>
+        {mobileErr
+          ? <p className="text-xs text-rose-400 mt-1.5 ml-0.5">{mobileErr}</p>
+          : <p className="text-xs text-slate-600 mt-1.5 ml-0.5">Country code · Mobile number</p>
+        }
       </div>
 
       {/* Email */}
@@ -165,10 +190,12 @@ export default function LeadForm() {
         <input
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => { setEmail(e.target.value); if (emailErr) setEmailErr(""); }}
+          onBlur={() => setEmailErr(validateEmail(email))}
           placeholder="john@example.com"
-          className={inputBase}
+          className={emailErr ? inputError : inputBase}
         />
+        {emailErr && <p className="text-xs text-rose-400 mt-1.5 ml-0.5">{emailErr}</p>}
       </div>
 
       {/* Course */}
