@@ -81,16 +81,16 @@ export default function LeadForm() {
     setResult(null);
     setLoading(true);
 
-    const payload = {
-      name,
+    const payload: Record<string, unknown> = {
       mobile_code: mobileCode,
       mobile,
       source: "CV Labs",
       sub_source: subSource,
-      course_id: COURSE_MAP[course],
-      email,
-      json_payload: [{ Attribute: "Notes", Value: notes }],
     };
+    if (name.trim())    payload.name        = name.trim();
+    if (email.trim())   payload.email       = email.trim();
+    if (course)         payload.course_id   = COURSE_MAP[course];
+    if (notes.trim())   payload.json_payload = [{ Attribute: "Notes", Value: notes.trim() }];
 
     try {
       const res = await fetch("https://lead-service.collegevidya.com/lead/create/", {
